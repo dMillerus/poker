@@ -1,0 +1,1308 @@
+# Poker Hand Analysis & Training Application
+## SDLC Phase Prompts for AI-Orchestrated Development
+
+---
+
+## Usage Instructions
+
+Each phase prompt is self-contained and designed for sequential execution. Execute phases in order, confirming completion before proceeding to the next phase. Each prompt includes:
+
+- **Context**: Background from previous phases
+- **Objective**: Specific deliverables for this phase
+- **Constraints**: Technical requirements and boundaries
+- **Acceptance Criteria**: Verification checklist
+- **Output Format**: Expected file structure
+
+---
+
+## Phase 1: Project Setup
+
+```markdown
+<context>
+You are building a poker hand analysis and training application. The application is a single-page React application that runs entirely client-side with offline capability. No backend server is required.
+
+Technology stack (non-negotiable):
+- React 18+ with TypeScript
+- Vite for build tooling
+- Zustand for state management
+- Tailwind CSS for styling
+- Dexie.js for IndexedDB abstraction
+- Vitest for testing
+</context>
+
+<objective>
+Initialize the project with all dependencies, configurations, and folder structure. The project must be immediately runnable with `npm run dev` after setup.
+</objective>
+
+<constraints>
+- Use Vite's React-TS template as base
+- Configure TypeScript strict mode
+- Set up path aliases for clean imports (@/components, @/engine, etc.)
+- Include ESLint and Prettier configurations
+- Configure Vitest for component and unit testing
+- Set up Tailwind with a poker-appropriate color palette (green felt, card colors)
+- Create placeholder index files for all major directories
+</constraints>
+
+<deliverables>
+1. package.json with all dependencies
+2. vite.config.ts with path aliases
+3. tsconfig.json with strict mode and path mappings
+4. tailwind.config.js with custom theme
+5. src/ directory structure:
+   - components/
+   - engine/
+   - stores/
+   - hooks/
+   - utils/
+   - types/
+   - db/
+6. Basic App.tsx shell
+7. index.css with Tailwind directives
+</deliverables>
+
+<acceptance_criteria>
+- [ ] `npm install` completes without errors
+- [ ] `npm run dev` starts development server
+- [ ] `npm run build` produces production bundle
+- [ ] `npm run test` executes (even with no tests yet)
+- [ ] TypeScript compilation has zero errors
+- [ ] Path aliases resolve correctly
+</acceptance_criteria>
+
+<output_format>
+Create each file with full content. Use this structure:
+/poker-trainer/
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.js
+├── postcss.config.js
+├── index.html
+└── src/
+    ├── main.tsx
+    ├── App.tsx
+    ├── index.css
+    ├── components/
+    │   └── index.ts
+    ├── engine/
+    │   └── index.ts
+    ├── stores/
+    │   └── index.ts
+    ├── hooks/
+    │   └── index.ts
+    ├── utils/
+    │   └── index.ts
+    ├── types/
+    │   └── index.ts
+    └── db/
+        └── index.ts
+</output_format>
+```
+
+---
+
+## Phase 2: Core Types
+
+```markdown
+<context>
+Project setup is complete. You are now defining the TypeScript type system that all other modules will depend on. These types represent the domain model for Texas Hold'em poker.
+
+The application tracks:
+- Cards (52-card deck)
+- Hands (player holdings, community cards)
+- Game state (streets, pot, players)
+- Probability calculations (outs, equity, odds)
+- AI guidance (analysis, feedback, concepts)
+- Statistics (historical data, patterns)
+</context>
+
+<objective>
+Create comprehensive TypeScript types and interfaces that provide type safety across all application modules. Types should be precise enough to catch logic errors at compile time.
+</objective>
+
+<constraints>
+- Use discriminated unions for state variants
+- Use const assertions for fixed values (ranks, suits)
+- Prefer interfaces for object shapes, types for unions/primitives
+- Include JSDoc comments for non-obvious types
+- Export all types from a single index.ts for clean imports
+- No runtime code in type files (pure declarations)
+</constraints>
+
+<deliverables>
+Create src/types/ with the following files:
+
+1. **card.ts**
+   - Suit (enum or const): clubs, diamonds, hearts, spades
+   - Rank (enum or const): 2-10, J, Q, K, A
+   - Card interface: { suit, rank }
+   - Deck type (Card[])
+   - Utility types: SuitSymbol, RankDisplay
+
+2. **hand.ts**
+   - HandRank enum: HighCard through RoyalFlush (1-10)
+   - HandCategory: pairs, connectors, suited, etc.
+   - HoleCards: exactly 2 cards
+   - CommunityCards: 0-5 cards
+   - EvaluatedHand: { rank, cards, kickers, description }
+   - StartingHandStrength: premium/strong/playable/marginal/weak
+
+3. **game.ts**
+   - Street enum: preflop, flop, turn, river, showdown
+   - Player interface: { id, holeCards, isHero, position }
+   - GameState interface: { street, deck, communityCards, players, handId }
+   - Position enum: UTG through BB for 6-max
+   - GameConfig: { playerCount, heroPosition }
+
+4. **probability.ts**
+   - Outs interface: { count, cards, targetHand }
+   - Equity interface: { win, lose, tie, sampleSize }
+   - Odds interface: { percentage, ratio, fractional }
+   - DrawType enum: flush, straight, gutshot, etc.
+   - ProbabilityResult: combined analysis output
+
+5. **guidance.ts**
+   - VerbosityLevel enum: beginner, intermediate, minimal
+   - GuidanceType enum: strength, draw, concept, warning
+   - GuidanceTrigger enum: preflop, flop, turn, river, showdown, postHand
+   - GuidanceMessage: { type, trigger, title, content, concepts }
+   - ConceptTag: enum of teachable concepts
+   - CompetencyScore: { concept, demonstrated, timestamp }
+
+6. **statistics.ts**
+   - HandRecord: full hand history with all states
+   - SessionStats: per-session aggregates
+   - LifetimeStats: cumulative metrics
+   - PatternType: recurring behaviors
+   - ProgressData: learning trajectory
+
+7. **index.ts**
+   - Re-export all types
+</deliverables>
+
+<acceptance_criteria>
+- [ ] All types compile without errors
+- [ ] No `any` types used
+- [ ] Discriminated unions have exhaustive checks possible
+- [ ] Card/Rank/Suit types prevent invalid combinations
+- [ ] HandRank ordering is correct (1=worst, 10=best)
+- [ ] All interfaces have required vs optional fields correctly marked
+</acceptance_criteria>
+
+<output_format>
+Each file should be complete and self-contained except for cross-file imports within src/types/. Example structure:
+
+```typescript
+// src/types/card.ts
+export const SUITS = ['clubs', 'diamonds', 'hearts', 'spades'] as const;
+export type Suit = typeof SUITS[number];
+// ... etc
+```
+</output_format>
+```
+
+---
+
+## Phase 3: Game Engine
+
+```markdown
+<context>
+Types are defined in src/types/. You are now implementing the core game engine that manages all poker game mechanics. This engine has no UI dependencies and can be tested independently.
+
+Key responsibilities:
+- Deck management (create, shuffle, deal)
+- Card dealing per street rules
+- Hand evaluation (determine best 5-card hand)
+- Street progression
+- AI opponent simulation (random behavior, not strategic)
+</context>
+
+<objective>
+Implement a complete, tested game engine that handles all Texas Hold'em mechanics for a single hand from shuffle through showdown.
+</objective>
+
+<constraints>
+- Pure functions where possible (no side effects)
+- Use Fisher-Yates for shuffling (cryptographically unnecessary but deterministic for testing)
+- Hand evaluation must handle all edge cases (split pots, kickers)
+- Engine must support 2-9 players
+- All functions must be typed with the types from Phase 2
+- Include comprehensive unit tests
+</constraints>
+
+<deliverables>
+Create src/engine/ with the following files:
+
+1. **deck.ts**
+   - createDeck(): Card[] - ordered 52-card deck
+   - shuffleDeck(deck: Card[]): Card[] - Fisher-Yates shuffle
+   - dealCards(deck: Card[], count: number): { dealt: Card[], remaining: Card[] }
+
+2. **evaluator.ts**
+   - evaluateHand(holeCards: Card[], communityCards: Card[]): EvaluatedHand
+   - compareHands(hand1: EvaluatedHand, hand2: EvaluatedHand): -1 | 0 | 1
+   - findBestHand(cards: Card[]): { hand: Card[], rank: HandRank }
+   - Helper functions for each hand type detection
+   - getHandDescription(evaluated: EvaluatedHand): string
+
+3. **game-controller.ts**
+   - initializeGame(config: GameConfig): GameState
+   - dealHoleCards(state: GameState): GameState
+   - dealFlop(state: GameState): GameState
+   - dealTurn(state: GameState): GameState
+   - dealRiver(state: GameState): GameState
+   - determineWinner(state: GameState): { winner: Player, hand: EvaluatedHand }[]
+   - advanceStreet(state: GameState): GameState
+
+4. **ai-opponents.ts**
+   - generateOpponentHands(deck: Card[], count: number): Card[][]
+   - simulateOpponentAction(): Action (random fold/call/raise for future use)
+
+5. **__tests__/evaluator.test.ts**
+   - Test all 10 hand rankings
+   - Test kicker comparisons
+   - Test split pot scenarios
+   - Test 7-card to 5-card selection
+
+6. **__tests__/deck.test.ts**
+   - Test deck creation (52 unique cards)
+   - Test shuffle produces different order
+   - Test dealing reduces deck correctly
+
+7. **__tests__/game-controller.test.ts**
+   - Test full hand progression
+   - Test state immutability
+   - Test multi-player scenarios
+</deliverables>
+
+<acceptance_criteria>
+- [ ] All unit tests pass
+- [ ] Hand evaluator correctly ranks all hand types
+- [ ] Kicker comparison works for all scenarios
+- [ ] Shuffle produces statistically random distribution
+- [ ] Game state transitions are immutable (new state returned)
+- [ ] Can simulate complete hand from deal to showdown
+- [ ] Handles 2-9 players correctly
+</acceptance_criteria>
+
+<output_format>
+Implement each file completely. For the evaluator, use this hand ranking order:
+1. High Card
+2. One Pair
+3. Two Pair
+4. Three of a Kind
+5. Straight
+6. Flush
+7. Full House
+8. Four of a Kind
+9. Straight Flush
+10. Royal Flush
+
+Include inline comments for non-obvious algorithm choices (e.g., bit manipulation for straight detection if used).
+</output_format>
+```
+
+---
+
+## Phase 4: Probability Engine
+
+```markdown
+<context>
+Game engine is complete in src/engine/. You now implement the probability engine that calculates odds, outs, and equity. This engine uses the game engine's card utilities but operates independently.
+
+The probability engine must be fast enough to run during gameplay without perceptible delay. Target: <200ms for equity calculations.
+</context>
+
+<objective>
+Implement probability calculations for outs, equity (via Monte Carlo simulation), and odds conversion. All calculations must be accurate and performant.
+</objective>
+
+<constraints>
+- Monte Carlo simulation: 10,000 iterations default (configurable)
+- Must account for dead cards (visible cards removed from deck)
+- Outs calculation must identify specific cards, not just count
+- Support equity calculation against 1-8 opponent ranges
+- Odds converter must handle percentage, ratio (e.g., 4:1), and fractional
+- Consider Web Worker compatibility (no DOM access)
+</constraints>
+
+<deliverables>
+Create src/engine/probability/ with:
+
+1. **outs.ts**
+   - calculateOuts(holeCards: Card[], communityCards: Card[], targetRank: HandRank): Outs
+   - getDrawType(holeCards: Card[], communityCards: Card[]): DrawType[]
+   - getOutsForDraw(drawType: DrawType, visibleCards: Card[]): Card[]
+   - Common draw detection: flush draw, OESD, gutshot, pair outs, etc.
+
+2. **equity.ts**
+   - calculateEquity(holeCards: Card[], communityCards: Card[], opponentCount: number, iterations?: number): Equity
+   - runSimulation(holeCards: Card[], board: Card[], deck: Card[], opponents: number): 'win' | 'lose' | 'tie'
+   - Internal: random opponent hand generation from remaining deck
+
+3. **odds.ts**
+   - toPercentage(outs: number, cardsRemaining: number): number
+   - toRatio(percentage: number): string (e.g., "4:1")
+   - toFractional(percentage: number): string (e.g., "1/5")
+   - potOdds(potSize: number, betSize: number): number
+   - impliedOdds(potSize: number, betSize: number, expectedFutureBets: number): number
+
+4. **range.ts**
+   - type Range = Card[][] (array of possible holdings)
+   - generateRandomRange(deck: Card[], count: number): Range
+   - Future: structured ranges like "top 20%" (stub for now)
+
+5. **__tests__/outs.test.ts**
+   - Flush draw = 9 outs
+   - OESD = 8 outs
+   - Gutshot = 4 outs
+   - Combination draws
+   - Dead card accounting
+
+6. **__tests__/equity.test.ts**
+   - AA vs random hand ~85% equity
+   - Flush draw on flop ~35% equity
+   - Made hand vs draw scenarios
+   - Verify iteration count affects precision
+
+7. **__tests__/odds.test.ts**
+   - Conversion accuracy
+   - Pot odds calculations
+</deliverables>
+
+<acceptance_criteria>
+- [ ] Outs calculation matches known poker math
+- [ ] Equity calculation within ±2% of known values (AA vs KK, etc.)
+- [ ] 10,000 iteration equity calc completes in <200ms
+- [ ] All odds conversions are mathematically correct
+- [ ] Dead cards properly excluded from all calculations
+- [ ] Unit tests verify edge cases
+</acceptance_criteria>
+
+<output_format>
+Key formula references for implementation:
+
+Outs to percentage (one card to come): outs / 47 * 100
+Outs to percentage (two cards to come): 1 - ((47-outs)/47 * (46-outs)/46) * 100
+Rule of 2 and 4: outs × 2 (one card) or outs × 4 (two cards) for approximation
+
+For Monte Carlo:
+```typescript
+// Pseudocode structure
+for (let i = 0; i < iterations; i++) {
+  const remainingDeck = removeVisibleCards(fullDeck, [...holeCards, ...board]);
+  const shuffled = shuffle(remainingDeck);
+  const opponentHands = dealOpponents(shuffled, opponentCount);
+  const fullBoard = completeBoard(board, shuffled);
+  const result = determineWinner(holeCards, opponentHands, fullBoard);
+  // tally result
+}
+```
+</output_format>
+```
+
+---
+
+## Phase 5: AI Guidance System
+
+```markdown
+<context>
+Game engine and probability engine are complete. You now implement the AI guidance system that provides educational feedback to the player. This system does NOT use an external LLM—all guidance is generated from deterministic rules and templates.
+
+The guidance system observes game state and probability calculations, then generates appropriate educational content based on the player's demonstrated competency level.
+</context>
+
+<objective>
+Implement a rule-based guidance system that provides contextual poker education at configurable verbosity levels. The system should feel helpful without being overwhelming.
+</objective>
+
+<constraints>
+- No external API calls—all guidance from local rules/templates
+- Support three verbosity levels: beginner, intermediate, minimal
+- Track which concepts have been explained to avoid repetition
+- Trigger guidance at appropriate moments (deal, flop, turn, river, showdown)
+- Post-hand summaries for learning reinforcement
+- Adaptive: reduce explanation depth for demonstrated concepts
+</constraints>
+
+<deliverables>
+Create src/engine/guidance/ with:
+
+1. **analyzer.ts**
+   - analyzeStartingHand(holeCards: Card[]): StartingHandAnalysis
+   - analyzeBoardTexture(communityCards: Card[]): BoardTexture
+   - analyzeHandStrength(evaluated: EvaluatedHand, board: Card[]): StrengthAnalysis
+   - detectDraws(holeCards: Card[], board: Card[]): DrawAnalysis[]
+   - assessPosition(position: Position, street: Street): PositionAdvice
+
+2. **concepts.ts**
+   - Define all teachable concepts as enum/const
+   - Concept definitions with beginner/intermediate explanations
+   - Concept prerequisites (what must be understood first)
+   - Examples:
+     - STARTING_HAND_STRENGTH
+     - POT_ODDS
+     - IMPLIED_ODDS
+     - POSITION_ADVANTAGE
+     - DRAWING_HANDS
+     - MADE_HANDS
+     - BOARD_TEXTURE
+     - DOMINATED_HANDS
+     - KICKER_IMPORTANCE
+
+3. **templates.ts**
+   - Message templates for each guidance type
+   - Parameterized strings for dynamic content
+   - Verbosity variants for each template
+   - Example: "You have {handDescription}. This is a {strength} starting hand because {reason}."
+
+4. **generator.ts**
+   - generateGuidance(trigger: GuidanceTrigger, state: GameState, probabilities: ProbabilityResult, verbosity: VerbosityLevel, competency: CompetencyScore[]): GuidanceMessage[]
+   - shouldExplainConcept(concept: ConceptTag, competency: CompetencyScore[]): boolean
+   - selectTemplate(type: GuidanceType, verbosity: VerbosityLevel): string
+   - fillTemplate(template: string, params: Record<string, string>): string
+
+5. **competency.ts**
+   - updateCompetency(current: CompetencyScore[], demonstrated: ConceptTag): CompetencyScore[]
+   - getCompetencyLevel(scores: CompetencyScore[]): VerbosityLevel (auto-adjust suggestion)
+   - hasSeenConcept(scores: CompetencyScore[], concept: ConceptTag): boolean
+   - decayCompetency(scores: CompetencyScore[], timeDelta: number): CompetencyScore[]
+
+6. **post-hand.ts**
+   - generatePostHandSummary(handHistory: GameState[], outcome: 'win' | 'lose', verbosity: VerbosityLevel): GuidanceMessage
+   - identifyKeyMoments(handHistory: GameState[]): KeyMoment[]
+   - suggestAlternatives(keyMoments: KeyMoment[]): string[]
+
+7. **__tests__/analyzer.test.ts**
+   - Starting hand classifications
+   - Board texture detection (dry, wet, paired, etc.)
+
+8. **__tests__/generator.test.ts**
+   - Correct guidance for various scenarios
+   - Verbosity level differences
+   - Concept repetition prevention
+</deliverables>
+
+<acceptance_criteria>
+- [ ] Starting hand analysis covers all 169 distinct holdings
+- [ ] Board texture analysis identifies wet/dry/paired boards
+- [ ] Guidance triggers at all specified moments
+- [ ] Verbosity levels produce meaningfully different output
+- [ ] Competency tracking prevents excessive repetition
+- [ ] Post-hand summaries highlight learning opportunities
+- [ ] All guidance is grammatically correct and clear
+</acceptance_criteria>
+
+<output_format>
+Starting hand classifications for reference:
+- Premium: AA, KK, QQ, JJ, AKs
+- Strong: TT, 99, AQs, AJs, KQs, AKo
+- Playable: 88-22, ATs-A2s, KJs-KTs, QJs, JTs, T9s, 98s, 87s, 76s, AQo-ATo, KQo
+- Marginal: Remaining suited connectors, suited one-gappers, remaining broadway
+- Weak: Everything else
+
+Board texture examples:
+- Dry: K♠ 7♦ 2♣ (no draws, disconnected)
+- Wet: J♥ T♥ 9♣ (straight draws, flush draws possible)
+- Paired: Q♠ Q♦ 5♣ (full house possible)
+</output_format>
+```
+
+---
+
+## Phase 6: Statistics Engine
+
+```markdown
+<context>
+Core engines (game, probability, guidance) are complete. You now implement the statistics engine that tracks player performance over time. This engine records every hand and computes aggregate metrics for the statistics dashboard.
+</context>
+
+<objective>
+Implement comprehensive hand tracking, performance analytics, and pattern detection. Data structures must support efficient queries for the statistics dashboard.
+</objective>
+
+<constraints>
+- Store complete hand history (all state transitions)
+- Aggregate statistics by multiple dimensions (starting hand, position, street, etc.)
+- Detect patterns in player behavior (e.g., "always folds flush draws")
+- Track progress over time for learning curve visualization
+- Memory-efficient: design for 10,000+ hands without performance degradation
+- Data must persist via the persistence layer (Phase 7)
+</constraints>
+
+<deliverables>
+Create src/engine/statistics/ with:
+
+1. **recorder.ts**
+   - recordHand(states: GameState[], outcome: HandOutcome): HandRecord
+   - createSnapshot(state: GameState): StateSnapshot
+   - HandOutcome type: { winner: boolean, handRank: HandRank, potSize: number }
+
+2. **aggregator.ts**
+   - aggregateByStartingHand(hands: HandRecord[]): StartingHandStats[]
+   - aggregateByPosition(hands: HandRecord[]): PositionStats[]
+   - aggregateByStreet(hands: HandRecord[]): StreetStats[]
+   - calculateWinRate(hands: HandRecord[], filter?: HandFilter): number
+   - calculateShowdownRate(hands: HandRecord[]): number
+
+3. **patterns.ts**
+   - detectPatterns(hands: HandRecord[]): Pattern[]
+   - Pattern types:
+     - FOLDS_DRAWS: frequently folds drawing hands
+     - OVERPLAYS_WEAK: takes marginal hands too far
+     - POSITION_BLIND: ignores position advantage
+     - RESULT_ORIENTED: changes strategy after losses
+   - patternToGuidance(pattern: Pattern): GuidanceMessage
+
+4. **progress.ts**
+   - calculateProgressMetrics(hands: HandRecord[], timeRange: DateRange): ProgressMetrics
+   - ProgressMetrics: { handsPlayed, winRate, conceptsMastered, streakData }
+   - detectImprovement(older: ProgressMetrics, newer: ProgressMetrics): ImprovementReport
+   - generateLearningCurve(hands: HandRecord[]): DataPoint[]
+
+5. **session.ts**
+   - SessionManager class:
+     - startSession(): SessionId
+     - endSession(id: SessionId): SessionStats
+     - getCurrentSession(): Session | null
+     - getSessionHistory(): Session[]
+   - SessionStats: { duration, handsPlayed, netResult, peakHandRank }
+
+6. **queries.ts**
+   - Efficient query builders for statistics dashboard
+   - getHandsByDateRange(start: Date, end: Date): HandRecord[]
+   - getHandsByStartingCards(cards: Card[]): HandRecord[]
+   - getRecentHands(limit: number): HandRecord[]
+   - searchHands(filter: HandFilter): HandRecord[]
+
+7. **__tests__/aggregator.test.ts**
+   - Win rate calculation accuracy
+   - Grouping correctness
+
+8. **__tests__/patterns.test.ts**
+   - Pattern detection triggers
+   - Edge cases (insufficient data)
+</deliverables>
+
+<acceptance_criteria>
+- [ ] Complete hand history captured with all state transitions
+- [ ] Aggregations produce accurate statistics
+- [ ] Pattern detection identifies at least 4 behavior patterns
+- [ ] Progress tracking shows improvement over time
+- [ ] Session management tracks discrete play periods
+- [ ] Queries perform efficiently on 1000+ hand datasets
+- [ ] All statistics match manual calculation verification
+</acceptance_criteria>
+
+<output_format>
+HandRecord structure reference:
+```typescript
+interface HandRecord {
+  id: string;
+  timestamp: Date;
+  sessionId: string;
+  config: GameConfig;
+  holeCards: Card[];
+  communityCards: Card[];
+  snapshots: StateSnapshot[]; // state at each street
+  outcome: HandOutcome;
+  guidanceShown: GuidanceMessage[];
+  duration: number; // ms from deal to showdown
+}
+```
+
+Aggregation output example:
+```typescript
+interface StartingHandStats {
+  cards: [Card, Card]; // canonical form (higher first, suited indicated)
+  timesDealt: number;
+  timesWon: number;
+  winRate: number;
+  averageHandRank: number;
+  profitability: number; // abstract units
+}
+```
+</output_format>
+```
+
+---
+
+## Phase 7: Persistence Layer
+
+```markdown
+<context>
+All engines are complete. You now implement the persistence layer using IndexedDB (via Dexie.js) to store all application data locally. The application must work offline with all data persisted between sessions.
+</context>
+
+<objective>
+Implement a robust persistence layer that stores hand history, statistics, user preferences, and progress data. The layer must handle IndexedDB's async nature cleanly and provide a simple API for other modules.
+</objective>
+
+<constraints>
+- Use Dexie.js for IndexedDB abstraction
+- Design schema for efficient queries (proper indexes)
+- Handle storage quota gracefully (prune old data if needed)
+- Support data export/import for backup
+- Migrations for schema changes
+- All operations must be async/await compatible
+</constraints>
+
+<deliverables>
+Create src/db/ with:
+
+1. **schema.ts**
+   - Database schema definition
+   - Tables: hands, sessions, preferences, progress, concepts
+   - Indexes for common query patterns
+   - Version migrations
+
+2. **database.ts**
+   - PokerTrainerDB class extending Dexie
+   - Table definitions with TypeScript typing
+   - Connection management
+   - Error handling wrapper
+
+3. **repositories/hands.ts**
+   - saveHand(record: HandRecord): Promise<string>
+   - getHand(id: string): Promise<HandRecord | null>
+   - getHandsBySession(sessionId: string): Promise<HandRecord[]>
+   - getHandsByDateRange(start: Date, end: Date): Promise<HandRecord[]>
+   - getRecentHands(limit: number): Promise<HandRecord[]>
+   - deleteHand(id: string): Promise<void>
+   - countHands(): Promise<number>
+
+4. **repositories/sessions.ts**
+   - saveSession(session: Session): Promise<string>
+   - getSession(id: string): Promise<Session | null>
+   - getAllSessions(): Promise<Session[]>
+   - updateSession(id: string, updates: Partial<Session>): Promise<void>
+   - deleteSession(id: string): Promise<void>
+
+5. **repositories/preferences.ts**
+   - getPreferences(): Promise<UserPreferences>
+   - savePreferences(prefs: UserPreferences): Promise<void>
+   - updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]): Promise<void>
+   - resetPreferences(): Promise<void>
+
+6. **repositories/progress.ts**
+   - saveProgress(data: ProgressData): Promise<void>
+   - getProgress(): Promise<ProgressData>
+   - saveConceptCompetency(scores: CompetencyScore[]): Promise<void>
+   - getConceptCompetency(): Promise<CompetencyScore[]>
+
+7. **maintenance.ts**
+   - pruneOldHands(keepCount: number): Promise<number> // returns deleted count
+   - getStorageUsage(): Promise<{ used: number, quota: number }>
+   - exportData(): Promise<ExportedData>
+   - importData(data: ExportedData): Promise<ImportResult>
+   - clearAllData(): Promise<void>
+
+8. **hooks.ts**
+   - useDatabase(): PokerTrainerDB
+   - useHands(): HandsRepository hooks
+   - useSessions(): SessionsRepository hooks
+   - usePreferences(): PreferencesRepository hooks
+   - useProgress(): ProgressRepository hooks
+
+9. **__tests__/database.test.ts**
+   - CRUD operations for all tables
+   - Query performance with mock data
+   - Migration testing
+   - Storage limit handling
+</deliverables>
+
+<acceptance_criteria>
+- [ ] Database initializes without errors
+- [ ] All CRUD operations work correctly
+- [ ] Indexes improve query performance
+- [ ] Storage quota handling prevents crashes
+- [ ] Export/import produces valid data round-trip
+- [ ] Migrations handle schema changes
+- [ ] React hooks provide clean API
+- [ ] Works in private browsing (graceful degradation)
+</acceptance_criteria>
+
+<output_format>
+Dexie schema reference:
+```typescript
+class PokerTrainerDB extends Dexie {
+  hands!: Table<HandRecord>;
+  sessions!: Table<Session>;
+  preferences!: Table<UserPreferences>;
+  progress!: Table<ProgressData>;
+  concepts!: Table<CompetencyScore>;
+
+  constructor() {
+    super('PokerTrainer');
+    this.version(1).stores({
+      hands: '++id, sessionId, timestamp, [holeCards.0.rank+holeCards.0.suit]',
+      sessions: '++id, startTime, endTime',
+      preferences: 'id', // singleton
+      progress: 'id', // singleton
+      concepts: 'concept, lastDemonstrated'
+    });
+  }
+}
+```
+
+Storage limits:
+- Target: Keep last 10,000 hands
+- Warn at 80% quota
+- Auto-prune at 90% quota
+</output_format>
+```
+
+---
+
+## Phase 8: State Management
+
+```markdown
+<context>
+All engines and persistence are complete. You now implement the Zustand state management layer that connects the engines to the UI. This layer orchestrates the flow between game engine, probability calculations, AI guidance, and statistics.
+</context>
+
+<objective>
+Implement Zustand stores that manage application state, coordinate engine calls, and provide a clean API for React components. The stores should handle the async nature of calculations and persistence.
+</objective>
+
+<constraints>
+- Use Zustand with TypeScript
+- Separate stores by domain (game, guidance, statistics, preferences)
+- Support middleware for persistence sync
+- Actions should coordinate multi-engine operations
+- Derived state via selectors, not redundant storage
+- DevTools support for debugging
+</constraints>
+
+<deliverables>
+Create src/stores/ with:
+
+1. **gameStore.ts**
+   ```typescript
+   interface GameStore {
+     // State
+     gameState: GameState | null;
+     isLoading: boolean;
+     error: string | null;
+     
+     // Actions
+     startNewHand: () => Promise<void>;
+     advanceToNextStreet: () => Promise<void>;
+     goToShowdown: () => Promise<void>;
+     resetGame: () => void;
+     
+     // Selectors
+     getCurrentStreet: () => Street | null;
+     getHeroCards: () => Card[] | null;
+     getCommunityCards: () => Card[];
+     getOpponentCount: () => number;
+   }
+   ```
+
+2. **probabilityStore.ts**
+   ```typescript
+   interface ProbabilityStore {
+     // State
+     currentOuts: Outs | null;
+     currentEquity: Equity | null;
+     currentOdds: Odds | null;
+     isCalculating: boolean;
+     
+     // Actions
+     calculateProbabilities: (gameState: GameState) => Promise<void>;
+     clearProbabilities: () => void;
+     
+     // Selectors
+     getFormattedOdds: () => string;
+     getEquityPercentage: () => number;
+   }
+   ```
+
+3. **guidanceStore.ts**
+   ```typescript
+   interface GuidanceStore {
+     // State
+     messages: GuidanceMessage[];
+     verbosity: VerbosityLevel;
+     competencyScores: CompetencyScore[];
+     
+     // Actions
+     generateGuidance: (trigger: GuidanceTrigger, gameState: GameState, probabilities: ProbabilityResult) => void;
+     setVerbosity: (level: VerbosityLevel) => void;
+     markConceptDemonstrated: (concept: ConceptTag) => void;
+     clearMessages: () => void;
+     
+     // Selectors
+     getLatestMessage: () => GuidanceMessage | null;
+     getMessagesByTrigger: (trigger: GuidanceTrigger) => GuidanceMessage[];
+   }
+   ```
+
+4. **statisticsStore.ts**
+   ```typescript
+   interface StatisticsStore {
+     // State
+     currentSession: Session | null;
+     lifetimeStats: LifetimeStats | null;
+     recentHands: HandRecord[];
+     isLoading: boolean;
+     
+     // Actions
+     startSession: () => Promise<void>;
+     endSession: () => Promise<void>;
+     recordHand: (states: GameState[], outcome: HandOutcome) => Promise<void>;
+     loadStatistics: () => Promise<void>;
+     
+     // Selectors
+     getWinRate: () => number;
+     getHandsPlayedToday: () => number;
+     getSessionDuration: () => number;
+   }
+   ```
+
+5. **preferencesStore.ts**
+   ```typescript
+   interface PreferencesStore {
+     // State
+     preferences: UserPreferences;
+     isLoaded: boolean;
+     
+     // Actions
+     loadPreferences: () => Promise<void>;
+     updatePreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => Promise<void>;
+     resetToDefaults: () => Promise<void>;
+   }
+   ```
+
+6. **middleware/persist.ts**
+   - Middleware to sync stores with IndexedDB
+   - Debounced writes to prevent excessive I/O
+   - Hydration on app load
+
+7. **middleware/logger.ts**
+   - Development logging middleware
+   - Action tracking for debugging
+
+8. **hooks.ts**
+   - useGame(): GameStore actions and selectors
+   - useProbabilities(): ProbabilityStore with auto-calculation
+   - useGuidance(): GuidanceStore with trigger helpers
+   - useStatistics(): StatisticsStore with formatted data
+   - usePreferences(): PreferencesStore
+   - useHandFlow(): Coordinated hook for complete hand lifecycle
+
+9. **__tests__/gameStore.test.ts**
+   - State transitions
+   - Action sequencing
+   - Error handling
+
+10. **__tests__/integration.test.ts**
+    - Full hand flow across all stores
+    - Persistence round-trip
+</deliverables>
+
+<acceptance_criteria>
+- [ ] All stores initialize correctly
+- [ ] Actions coordinate engine calls properly
+- [ ] State updates trigger re-renders appropriately
+- [ ] Persistence middleware syncs to IndexedDB
+- [ ] Selectors compute derived state efficiently
+- [ ] DevTools show state changes
+- [ ] Full hand can be played through store actions
+- [ ] Statistics update after each hand
+</acceptance_criteria>
+
+<output_format>
+Zustand store pattern:
+```typescript
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+export const useGameStore = create<GameStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // initial state
+        gameState: null,
+        
+        // actions
+        startNewHand: async () => {
+          set({ isLoading: true });
+          const state = initializeGame(get().config);
+          set({ gameState: state, isLoading: false });
+        },
+      }),
+      { name: 'game-store' }
+    )
+  )
+);
+```
+</output_format>
+```
+
+---
+
+## Phase 9: UI Components
+
+```markdown
+<context>
+All backend systems (engines, persistence, state management) are complete. You now implement the React UI components. The UI should be clean, functional, and poker-themed without being garish.
+
+Component hierarchy:
+- App (layout shell)
+  - GameTable (card display, controls)
+  - GuidancePanel (AI feedback)
+  - StatisticsDashboard (performance metrics)
+  - HandReplay (review past hands)
+  - Settings (preferences)
+</context>
+
+<objective>
+Implement all UI components with proper TypeScript typing, Tailwind styling, and store integration. Components should be responsive and accessible.
+</objective>
+
+<constraints>
+- Functional components with hooks only
+- Tailwind CSS for all styling (no CSS files)
+- Responsive design (mobile-friendly)
+- Accessible (keyboard navigation, ARIA labels)
+- Card visuals using Unicode suits or simple SVG
+- No external component libraries (build from scratch)
+- Smooth animations for card dealing
+</constraints>
+
+<deliverables>
+Create src/components/ with:
+
+1. **layout/AppShell.tsx**
+   - Main layout container
+   - Navigation between views
+   - Responsive sidebar/header
+
+2. **layout/Header.tsx**
+   - App title
+   - Session info (hands played, duration)
+   - Settings access
+
+3. **game/GameTable.tsx**
+   - Green felt background
+   - Community card area
+   - Player positions
+   - Control buttons (Deal, Next Street, New Hand)
+
+4. **game/Card.tsx**
+   - Single card display
+   - Face-up/face-down states
+   - Suit coloring (red/black)
+   - Hover effects
+   - Props: card: Card, faceDown?: boolean, size?: 'sm' | 'md' | 'lg'
+
+5. **game/CardGroup.tsx**
+   - Displays multiple cards (hole cards, community)
+   - Spacing and overlap options
+   - Animation on deal
+
+6. **game/PlayerPosition.tsx**
+   - Shows player cards
+   - Position label
+   - Win/lose indicator at showdown
+
+7. **game/Controls.tsx**
+   - Deal button
+   - Next street button
+   - New hand button
+   - Disabled states based on game state
+
+8. **guidance/GuidancePanel.tsx**
+   - Scrollable message list
+   - Message type styling (info, warning, concept)
+   - Collapsible for mobile
+
+9. **guidance/GuidanceMessage.tsx**
+   - Single guidance message
+   - Icon by type
+   - Expandable details
+   - Concept tags
+
+10. **guidance/VerbosityToggle.tsx**
+    - Three-state toggle (beginner/intermediate/minimal)
+    - Label and description
+
+11. **statistics/StatisticsDashboard.tsx**
+    - Tab container for different stat views
+    - Lifetime / Session / Starting Hands tabs
+
+12. **statistics/WinRateChart.tsx**
+    - Simple bar or line chart (no library, SVG-based)
+    - Win rate over time
+
+13. **statistics/StartingHandGrid.tsx**
+    - 13x13 grid of starting hands
+    - Color-coded by win rate
+    - Click for details
+
+14. **statistics/SessionSummary.tsx**
+    - Current session stats
+    - Hands played, win rate, duration
+    - Best hand made
+
+15. **replay/HandReplay.tsx**
+    - Street-by-street replay
+    - Forward/back controls
+    - Guidance shown at each point
+
+16. **replay/HandList.tsx**
+    - Searchable/filterable hand history
+    - Click to replay
+
+17. **settings/SettingsPanel.tsx**
+    - Preferences form
+    - Opponent count slider
+    - Verbosity selection
+    - Data management (export/import/clear)
+
+18. **common/Button.tsx**
+    - Reusable button with variants
+    - Primary, secondary, danger styles
+    - Loading state
+
+19. **common/Modal.tsx**
+    - Reusable modal overlay
+    - Close button, click-outside-to-close
+
+20. **common/Tabs.tsx**
+    - Reusable tab component
+    - Keyboard navigation
+
+21. **__tests__/Card.test.tsx**
+    - Renders correctly
+    - Face-down state
+
+22. **__tests__/GameTable.test.tsx**
+    - Integration with game store
+    - Control button states
+</deliverables>
+
+<acceptance_criteria>
+- [ ] All components render without errors
+- [ ] Cards display correctly with proper suits/colors
+- [ ] Game flow works end-to-end via UI
+- [ ] Guidance panel updates on each street
+- [ ] Statistics dashboard shows accurate data
+- [ ] Hand replay works for past hands
+- [ ] Settings persist changes
+- [ ] Responsive on mobile viewports
+- [ ] Keyboard accessible
+- [ ] No console errors or warnings
+</acceptance_criteria>
+
+<output_format>
+Component template:
+```typescript
+import { FC } from 'react';
+import { useGameStore } from '@/stores/gameStore';
+
+interface CardProps {
+  card: Card;
+  faceDown?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const Card: FC<CardProps> = ({ card, faceDown = false, size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'w-12 h-16',
+    md: 'w-16 h-22',
+    lg: 'w-20 h-28',
+  };
+  
+  // ... implementation
+};
+```
+
+Card display reference:
+- Suits: ♠ ♥ ♦ ♣
+- Colors: spades/clubs = black (#1a1a1a), hearts/diamonds = red (#dc2626)
+- Card back: gradient or pattern
+</output_format>
+```
+
+---
+
+## Phase 10: Integration & Polish
+
+```markdown
+<context>
+All components are built. You now wire everything together, add the service worker for offline capability, optimize performance, and add final polish.
+</context>
+
+<objective>
+Complete the application by integrating all components, ensuring offline functionality, optimizing bundle size, and adding quality-of-life improvements.
+</objective>
+
+<constraints>
+- Service worker must cache all assets
+- Bundle size target: <500KB gzipped
+- First contentful paint: <1.5s
+- All features work offline
+- No console errors in production
+- Handle edge cases gracefully
+</constraints>
+
+<deliverables>
+
+1. **src/App.tsx (final)**
+   - Route setup (if using router) or view switching
+   - Store initialization
+   - Loading states
+   - Error boundaries
+
+2. **src/main.tsx (final)**
+   - Service worker registration
+   - Database initialization
+   - Root render
+
+3. **public/sw.js**
+   - Cache-first strategy for assets
+   - Network-first for API calls (if any future)
+   - Offline fallback
+
+4. **vite.config.ts (updated)**
+   - PWA plugin configuration
+   - Bundle optimization
+   - Chunk splitting strategy
+
+5. **src/components/ErrorBoundary.tsx**
+   - Catch rendering errors
+   - Graceful fallback UI
+   - Error reporting (console)
+
+6. **src/hooks/useOffline.ts**
+   - Detect online/offline status
+   - Show indicator when offline
+
+7. **src/components/OfflineIndicator.tsx**
+   - Banner when offline
+   - Dismissible
+
+8. **Performance optimizations:**
+   - React.memo for Card components
+   - useMemo for probability calculations
+   - Lazy loading for Statistics and Replay views
+   - Virtual scrolling for hand history (if >100 items)
+
+9. **Final testing checklist script:**
+   - Automated checks for all acceptance criteria
+
+10. **README.md**
+    - Project overview
+    - Setup instructions
+    - Architecture summary
+    - Development commands
+</deliverables>
+
+<acceptance_criteria>
+- [ ] App loads and runs without errors
+- [ ] Complete hand can be played
+- [ ] Guidance appears at each street
+- [ ] Statistics update after hands
+- [ ] Hand replay works
+- [ ] Settings persist
+- [ ] Works offline after first load
+- [ ] Bundle size <500KB gzipped
+- [ ] No console errors
+- [ ] Mobile responsive
+- [ ] Lighthouse score >90 for PWA
+</acceptance_criteria>
+
+<output_format>
+Final file tree:
+```
+/poker-trainer/
+├── public/
+│   ├── sw.js
+│   ├── manifest.json
+│   └── icons/
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── index.css
+│   ├── components/
+│   │   ├── layout/
+│   │   ├── game/
+│   │   ├── guidance/
+│   │   ├── statistics/
+│   │   ├── replay/
+│   │   ├── settings/
+│   │   └── common/
+│   ├── engine/
+│   │   ├── deck.ts
+│   │   ├── evaluator.ts
+│   │   ├── game-controller.ts
+│   │   ├── probability/
+│   │   ├── guidance/
+│   │   └── statistics/
+│   ├── stores/
+│   ├── hooks/
+│   ├── db/
+│   ├── types/
+│   └── utils/
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.js
+└── README.md
+```
+
+Service worker caching:
+```javascript
+const CACHE_NAME = 'poker-trainer-v1';
+const ASSETS = [
+  '/',
+  '/index.html',
+  '/assets/main.js',
+  '/assets/main.css',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+</output_format>
+```
+
+---
+
+## Execution Notes
+
+**Sequential Execution Required:** Each phase builds on previous phases. Do not skip phases.
+
+**Checkpoint Protocol:** After each phase, verify all acceptance criteria before proceeding. Failed criteria must be resolved before continuing.
+
+**Error Recovery:** If a phase fails, debug within that phase. Do not attempt to fix in later phases.
+
+**Estimated Effort:**
+| Phase | Files | Complexity |
+|-------|-------|------------|
+| 1 | 10 | Low |
+| 2 | 7 | Low |
+| 3 | 7 | High |
+| 4 | 7 | High |
+| 5 | 8 | Medium |
+| 6 | 8 | Medium |
+| 7 | 9 | Medium |
+| 8 | 10 | Medium |
+| 9 | 22 | High |
+| 10 | 10 | Medium |
+
+**Total: ~98 files**
