@@ -112,6 +112,7 @@ export {
   type PatternType,
   type Pattern,
   type ProgressMetrics,
+  type ProgressData,
   type ImprovementReport,
   type DataPoint,
   type Session,

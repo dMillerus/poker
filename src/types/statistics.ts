@@ -299,6 +299,43 @@ export interface SessionStats {
 }
 
 /**
+ * Learning trajectory and progress data
+ */
+export interface ProgressData {
+  /** Unique identifier */
+  readonly id: string;
+
+  /** User identifier */
+  readonly userId: string;
+
+  /** Data points for learning curve */
+  readonly learningCurve: readonly DataPoint[];
+
+  /** Historical progress metrics by period */
+  readonly historicalMetrics: readonly {
+    readonly period: DateRange;
+    readonly metrics: ProgressMetrics;
+  }[];
+
+  /** Current competency scores */
+  readonly competencyScores: readonly {
+    readonly concept: ConceptTag;
+    readonly score: number;
+    readonly lastUpdated: Date;
+  }[];
+
+  /** Milestones achieved */
+  readonly milestones: readonly {
+    readonly name: string;
+    readonly achievedAt: Date;
+    readonly description: string;
+  }[];
+
+  /** Last updated timestamp */
+  readonly lastUpdated: Date;
+}
+
+/**
  * Lifetime aggregate statistics
  */
 export interface LifetimeStats {
