@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#14532d"/>
+    </linearGradient>
+  </defs>
+  <!-- Spade symbol -->
+  <path d="M50 10 C50 10 20 40 20 55 C20 70 35 75 50 60 C65 75 80 70 80 55 C80 40 50 10 50 10 Z" fill="url(#cardGradient)"/>
+  <ellipse cx="50" cy="85" rx="12" ry="10" fill="url(#cardGradient)"/>
+  <rect x="45" y="55" width="10" height="35" fill="url(#cardGradient)"/>
+</svg>
